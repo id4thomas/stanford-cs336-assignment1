@@ -1,5 +1,43 @@
 # CS336 Spring 2025 Assignment 1: Basics
+## 2. Byte-Pair Encoding (BPE) Tokenizer
+### 2-1. Training BPE
+Methodology
+```
+1. Initialize Vocab
+2. Pretokenize
+    2-1. Calculate Pretoken frequencies (Pretoken using GPT-2 PAT pattern)
+        * This part is done in multiprocessing
+    2-2. Make Double Linked List of Bytes (split pretoken)
+3. Count byte pair frequencies, record locations
+    * pair_counts, pair_positions
+4. Merge (loop)
+    4-1. Find byte pair with max count
+    4-2. Add to merges, vocab
+    4-3. Iterate through pair_positions[pair] -> Update left/right of pair
+```
 
+Testcases
+```
+tests/test_train_bpe.py::test_train_bpe_speed PASSED
+tests/test_train_bpe.py::test_train_bpe PASSED
+tests/test_train_bpe.py::test_train_bpe_special_tokens PASSED
+```
+
+Training Speed by num_processes (M1 Max)
+
+| input_file | 1 Process | 4 Processes | 8 Processes | 16 Processes |
+| --- | --- | --- | --- | --- |
+| corpus.en | 3.363 | 3.140 | 3.141 | 3.085 |
+| tinystories_sample_5M.txt | 18.560 | 21.056 | 22.420 | 22.646 |
+
+
+## 3. Transformer Language Model Architecture
+TBD
+
+## 4. Training a Transformer LM
+TBD
+
+----
 For a full description of the assignment, see the assignment handout at
 [cs336_spring2025_assignment1_basics.pdf](./cs336_spring2025_assignment1_basics.pdf)
 
