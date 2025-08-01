@@ -11,7 +11,10 @@ from torch import Tensor
 
 import multiprocessing as mp
 from cs336_basics import *
+
+# Tokenizer
 from cs336_basics.tokenizer.train_bpe import train_bpe
+from cs336_basics.tokenizer.bpe import BPETokenizer
 
 def run_linear(
     d_in: int,
@@ -562,7 +565,11 @@ def get_tokenizer(
     Returns:
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
-    raise NotImplementedError
+    return BPETokenizer(
+        vocab=vocab,
+        merges=merges,
+        special_tokens=special_tokens
+    )
 
 
 def run_train_bpe(

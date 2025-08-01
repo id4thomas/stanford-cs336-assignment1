@@ -1,7 +1,9 @@
 # CS336 Spring 2025 Assignment 1: Basics
 ## 2. Byte-Pair Encoding (BPE) Tokenizer
-### 2-1. Training BPE
-Methodology
+[[Docs (testcase results)](./docs/2-tokenizer.md)]
+
+### Training BPE
+Methodology:
 ```
 1. Initialize Vocab
 2. Pretokenize
@@ -16,14 +18,7 @@ Methodology
     4-3. Iterate through pair_positions[pair] -> Update left/right of pair
 ```
 
-Testcases
-```
-tests/test_train_bpe.py::test_train_bpe_speed PASSED
-tests/test_train_bpe.py::test_train_bpe PASSED
-tests/test_train_bpe.py::test_train_bpe_special_tokens PASSED
-```
-
-Training Speed by num_processes (M1 Max)
+Training Speed by num_processes (M1 Max):
 
 | input_file | 1 Process | 4 Processes | 8 Processes | 16 Processes |
 | --- | --- | --- | --- | --- |
