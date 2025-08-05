@@ -1,14 +1,15 @@
 # 2. Byte-Pair Encoding (BPE) Tokenizer
 
-## Testcases
-### 2-1. test_train_bpe (Updated 250731)
+## 2-1. test_train_bpe (Updated 250731)
+### Testcases
 ```
 tests/test_train_bpe.py::test_train_bpe_speed PASSED
 tests/test_train_bpe.py::test_train_bpe PASSED
 tests/test_train_bpe.py::test_train_bpe_special_tokens PASSED
 ```
 
-### 2-2. test_tokenizer (Updated 250801)
+## 2-2. test_tokenizer (Updated 250801)
+### Testcases
 ```
 tests/test_tokenizer.py::test_roundtrip_empty PASSED
 tests/test_tokenizer.py::test_empty_matches_tiktoken PASSED

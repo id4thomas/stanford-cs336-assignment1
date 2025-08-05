@@ -15,6 +15,13 @@ from cs336_basics import *
 # Tokenizer
 from cs336_basics.tokenizer.train_bpe import train_bpe
 from cs336_basics.tokenizer.bpe import BPETokenizer
+from cs336_basics.layers import (
+    Embedding,
+    Linear,
+    RMSNorm,
+    SiLU,
+    SwiGLU
+)
 
 def run_linear(
     d_in: int,
@@ -34,8 +41,9 @@ def run_linear(
     Returns:
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
-
-    raise NotImplementedError
+    layer = Linear(d_in, d_out)
+    layer.load_state_dict({'weight': weights})
+    return layer(in_features)
 
 
 def run_embedding(
@@ -56,8 +64,10 @@ def run_embedding(
     Returns:
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
-
-    raise NotImplementedError
+    layer = Embedding(vocab_size, d_model)
+    layer.load_state_dict({'weight': weights})
+    # layer.weight.data=weights
+    return layer(token_ids)
 
 
 def run_swiglu(
@@ -89,7 +99,18 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
+    layer = SwiGLU(
+        d_model=d_model,
+        d_ff=d_ff
+    )
+    layer.load_state_dict(
+        {
+            'w1.weight': w1_weight,
+            'w2.weight': w2_weight,
+            'w3.weight': w3_weight,
+        }
+    )
+    return layer(in_features)
 
 
 def run_scaled_dot_product_attention(
@@ -384,7 +405,10 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    raise NotImplementedError
+    layer = RMSNorm(d_model, eps=eps)
+    # layer.gain=weights
+    layer.load_state_dict({'gain': weights})
+    return layer(in_features)
 
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
@@ -398,7 +422,8 @@ def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
         Float[Tensor,"..."]: of with the same shape as `in_features` with the output of applying
         SiLU to each element.
     """
-    raise NotImplementedError
+    layer = SiLU()
+    return layer(in_features)
 
 
 def run_get_batch(
