@@ -1,3 +1,7 @@
+from .attention import (
+    softmax,
+    ScaledDotProductAttention
+)
 from .embedding import Embedding
 from .linear import Linear
 from .rmsnorm import RMSNorm
@@ -9,6 +13,8 @@ __all__=[
     "Linear",
     "RMSNorm",
     "RoPE",
+    "ScaledDotProductAttention",
     "SiLU",
-    "SwiGLU"
+    "SwiGLU",
+    "softmax"
 ]

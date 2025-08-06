@@ -71,5 +71,17 @@ x_out[..., (H/2-1),1]
 
 Testcases:
 ```
-(..., seq_len, d_k//2, 2)
+tests/test_model.py::test_rope PASSED
+```
+
+### 3-2-4. Scaled Dot-Product Attention
+Softmax:
+* Use the trick of subtracting the maximum value in the i-th dimension from all elements of the i-th dimension to avoid numerical stability issues.
+    * softmax operation is invariant to adding any constant c to all inputs
+
+Scaled Dot-Product Attention
+
+Testcases:
+```
+tests/test_nn_utils.py::test_softmax_matches_pytorch PASSED
 ```
