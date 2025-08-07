@@ -80,7 +80,7 @@ class CausalMultiHeadSelfAttention(nn.Module):
         self.q_proj = Linear(d_model, d_model)
         self.k_proj = Linear(d_model, d_model)
         self.v_proj = Linear(d_model, d_model)
-        self.o_proj = Linear(d_model, d_model)
+        self.output_proj = Linear(d_model, d_model)
                 
         self.sdpa = ScaledDotProductAttention()
         self.rope = rope
@@ -117,7 +117,7 @@ class CausalMultiHeadSelfAttention(nn.Module):
         out = out.permute(0, 2, 1, 3)
         out = out.reshape(batch, seq_len, -1)
         
-        out = self.o_proj(out)
+        out = self.output_proj(out)
         return out
         
         

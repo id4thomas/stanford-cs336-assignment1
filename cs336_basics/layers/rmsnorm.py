@@ -11,8 +11,8 @@ class RMSNorm(nn.Module):
     ):
         super().__init__()
         # Make gain parameter
-        gain = torch.empty(d_model, dtype=dtype, device=device)
-        self.gain = nn.Parameter(gain, requires_grad=True)
+        weight = torch.empty(d_model, dtype=dtype, device=device)
+        self.weight = nn.Parameter(weight, requires_grad=True)
         
         self.d_model=d_model
         self.eps = eps
@@ -35,6 +35,6 @@ class RMSNorm(nn.Module):
         ms = ms/self.d_model
         rms = torch.sqrt(ms)
         
-        result = x*self.gain
+        result = x*self.weight
         result = result/rms
         return result.to(in_dtype)
