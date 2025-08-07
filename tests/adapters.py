@@ -16,6 +16,7 @@ from cs336_basics import *
 from cs336_basics.tokenizer.train_bpe import train_bpe
 from cs336_basics.tokenizer.bpe import BPETokenizer
 from cs336_basics.layers import (
+    CausalMultiHeadSelfAttention,
     Embedding,
     Linear,
     RMSNorm,
@@ -134,7 +135,8 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    raise NotImplementedError
+    layer = ScaledDotProductAttention()
+    return layer(Q, K, V, mask=mask)
 
 
 def run_multihead_self_attention(
@@ -168,7 +170,19 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    layer = CausalMultiHeadSelfAttention(
+        d_model=d_model,
+        num_heads=num_heads
+    )
+    layer.load_state_dict(
+        {
+            "q_proj.weight": q_proj_weight,
+            "k_proj.weight": k_proj_weight,
+            "v_proj.weight": v_proj_weight,
+            "o_proj.weight": o_proj_weight,
+        }
+    )
+    return layer(in_features)
 
 
 def run_multihead_self_attention_with_rope(
@@ -208,7 +222,27 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    d_head = d_model//num_heads
+    rope = RoPE(
+        theta=theta,
+        d_k=d_head,
+        max_seq_len=max_seq_len
+    )
+    
+    layer = CausalMultiHeadSelfAttention(
+        d_model=d_model,
+        num_heads=num_heads,
+        rope=rope
+    )
+    layer.load_state_dict(
+        {
+            "q_proj.weight": q_proj_weight,
+            "k_proj.weight": k_proj_weight,
+            "v_proj.weight": v_proj_weight,
+            "o_proj.weight": o_proj_weight,
+        }
+    )
+    return layer(in_features, token_positions=token_positions)
 
 
 def run_rope(
@@ -415,7 +449,6 @@ def run_rmsnorm(
         RMSNorm of the `in_features`.
     """
     layer = RMSNorm(d_model, eps=eps)
-    # layer.gain=weights
     layer.load_state_dict({'gain': weights})
     return layer(in_features)
 

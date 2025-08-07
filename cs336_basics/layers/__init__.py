@@ -1,6 +1,7 @@
 from .attention import (
     softmax,
-    ScaledDotProductAttention
+    ScaledDotProductAttention,
+    CausalMultiHeadSelfAttention
 )
 from .embedding import Embedding
 from .linear import Linear
@@ -9,6 +10,7 @@ from .rope import RoPE
 from .swiglu import SiLU, SwiGLU
 
 __all__=[
+    "CausalMultiHeadSelfAttention",
     "Embedding",
     "Linear",
     "RMSNorm",
