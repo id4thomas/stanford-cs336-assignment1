@@ -13,7 +13,7 @@ class Embedding(nn.Module):
         # Initialize
         weight = torch.empty(num_embeddings, embedding)
         weight = nn.init.trunc_normal_(weight, mean=0.0, std=1.0, a=-3.0, b=3.0)
-        self.weight = nn.Parameter(weight)
+        self.weight = nn.Parameter(weight, requires_grad=True)
         
         self.device=device
         self.dtype=dtype

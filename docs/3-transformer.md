@@ -108,9 +108,22 @@ tests/test_model.py::test_multihead_self_attention_with_rope PASSED
 ```
 
 ### 3-2-5. Transformer Block
-
+* attend: out1 = x + causalmha(rmsnorm(x))
+* feed-forward: out2 = out1 + ffnn(rmsnorm(out1))
 
 Testcases:
 ```
 tests/test_model.py::test_transformer_block PASSED
+```
+
+## 3-3. Transformer LM
+### 3-3-1. Transformer Model
+Notes:
+* apply rmsnorm before lm head
+* layers (List[TransformerBlock]) should be enclosed like `nn.ModuleList(layers)`
+
+Testcases:
+```
+tests/test_model.py::test_transformer_lm PASSED
+tests/test_model.py::test_transformer_lm_truncated_input PASSED
 ```

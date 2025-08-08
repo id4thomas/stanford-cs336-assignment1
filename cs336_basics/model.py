@@ -53,3 +53,53 @@ class TransformerBlock(nn.Module):
         out2 = self.ln2(out1)
         out2 = self.ffn(out2)
         return out1 + out2
+    
+class Transformer(nn.Module):
+    def __init__(
+        self,
+        vocab_size: int,
+        context_length: int,
+        d_model: int,
+        num_layers: int,
+        num_heads: int,
+        d_ff: int,
+        rope_theta: float,
+    ):
+        super().__init__()
+        self.token_embeddings = Embedding(
+            num_embeddings=vocab_size,
+            embedding=d_model
+        )
+        
+        layers = []
+        for _ in range(num_layers):
+            layer = TransformerBlock(
+                d_model=d_model,
+                num_heads=num_heads,
+                d_ff=d_ff,
+                max_seq_len=context_length,
+                theta=rope_theta
+            )
+            layers.append(layer)
+        self.layers = nn.ModuleList(layers)
+        
+        self.ln_final = RMSNorm(d_model=d_model)
+        self.lm_head = Linear(d_model, vocab_size)
+    
+    def forward(self, in_indices: torch.Tensor):
+        # in_indices: (batch_size, seq_len)
+        batch_size, seq_len = in_indices.shape
+        
+        # (batch, seq_len, d_model)
+        input_ids = self.token_embeddings(in_indices)
+        position_ids = torch.arange(0, seq_len).view(1, seq_len)
+        
+        out = input_ids
+        for layer in self.layers:
+            out = layer(out, token_positions=position_ids)
+        
+        out = self.ln_final(out)
+        out = self.lm_head(out)
+        return out
+        
+        

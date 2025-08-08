@@ -13,7 +13,7 @@ import multiprocessing as mp
 from cs336_basics import *
 
 # Tokenizer
-from cs336_basics.model import TransformerBlock
+from cs336_basics.model import TransformerBlock, Transformer
 from cs336_basics.tokenizer.train_bpe import train_bpe
 from cs336_basics.tokenizer.bpe import BPETokenizer
 from cs336_basics.layers import (
@@ -437,7 +437,17 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    model = Transformer(
+        vocab_size=vocab_size,
+        context_length=context_length,
+        d_model=d_model,
+        num_layers=num_layers,
+        num_heads=num_heads,
+        d_ff=d_ff,
+        rope_theta=rope_theta,
+    )
+    model.load_state_dict(weights)
+    return model(in_indices)
 
 
 def run_rmsnorm(
