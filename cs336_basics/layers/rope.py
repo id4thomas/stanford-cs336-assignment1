@@ -8,23 +8,16 @@ class RoPE(nn.Module):
         theta: float,
         d_k: int,
         max_seq_len: int,
-        device=None
+        device=None,
+        dtype=torch.float32
     ):
         super().__init__()
         
         # initialize inv_freq
-        dim_half_range = torch.arange(0, d_k, 2, dtype=torch.int64).to(dtype=torch.float)
-        dim_half_range = dim_half_range/d_k
         
-        inv_freq = 1.0 / (theta**dim_half_range)
-        
-        # register buffer
-        self.register_buffer(
-            'inv_freq',
-            inv_freq,
-            persistent=False # setting False excludes this from state_dict
-        )
-        
+        dim_half = torch.arange(0, d_k, 2, device=device, dtype=dtype) / d_k
+        inv_freq = torch.pow(torch.tensor(theta, dtype=dtype, device=device), -dim_half)
+        self.register_buffer('inv_freq', inv_freq, persistent=False)
         
     def forward(
         self,
@@ -35,6 +28,8 @@ class RoPE(nn.Module):
         x: shape (..., seq_len, d_k)
         token_positions: shape (..., seq_len)
         '''
+        token_positions = token_positions.to(dtype=x.dtype, device=x.device)
+        
         # Calculate Frequency
         # (batch, seq_len, d_k//2)
         freq = torch.einsum("... i, ... j->... ij", token_positions, self.inv_freq)

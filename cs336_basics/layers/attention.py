@@ -55,10 +55,12 @@ class ScaledDotProductAttention(nn.Module):
         
         # normalize
         qk/=math.sqrt(Q.shape[-1])
+        # qk/=torch.sqrt(torch.tensor(Q.shape[-1]))
         
         # mask
-        mask_values = torch.where(mask, torch.tensor(0.0), torch.tensor(float('-inf')))
-        qk += mask_values
+        qk = qk.masked_fill(~mask, float('-inf'))
+        # mask_values = torch.where(mask, torch.tensor(0.0), torch.tensor(float('-inf')))
+        # qk += mask_values
         
         # softmax
         qk = softmax(qk, dim=-1)
@@ -103,7 +105,7 @@ class CausalMultiHeadSelfAttention(nn.Module):
         Q = Q.permute(0, 2, 1, 3)
         K = K.permute(0, 2, 1, 3)
             
-        if not self.rope is None:
+        if not self.rope is None and not token_positions is None:
             # rope should be applied to Query, Key
             # each head should apply rope separately
             Q = self.rope(Q, token_positions)
