@@ -180,7 +180,7 @@ def run_multihead_self_attention(
             "q_proj.weight": q_proj_weight,
             "k_proj.weight": k_proj_weight,
             "v_proj.weight": v_proj_weight,
-            "o_proj.weight": o_proj_weight,
+            "output_proj.weight": o_proj_weight,
         }
     )
     return layer(in_features)
@@ -243,6 +243,7 @@ def run_multihead_self_attention_with_rope(
             "output_proj.weight": o_proj_weight,
         }
     )
+    # print(in_features.shape, token_positions.shape)
     return layer(in_features, token_positions=token_positions)
 
 
@@ -271,7 +272,6 @@ def run_rope(
         max_seq_len=max_seq_len
     )
     return rope(in_query_or_key, token_positions)
-    # raise NotImplementedError
 
 
 def run_transformer_block(
@@ -354,7 +354,7 @@ def run_transformer_block(
     layer.load_state_dict(weights)
     
     # make token_positions
-    token_positions = torch.arange(0, in_features.shape[-2])
+    token_positions = torch.arange(0, in_features.shape[-2]).view(1, in_features.shape[-2])
     return layer(in_features, token_positions=token_positions)
 
 
