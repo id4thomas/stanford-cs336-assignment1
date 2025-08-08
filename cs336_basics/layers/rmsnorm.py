@@ -31,9 +31,10 @@ class RMSNorm(nn.Module):
             torch.square(x),
             dim=-1,
             keepdim=True
-        ) + self.eps
+        )
         ms = ms/self.d_model
-        rms = torch.sqrt(ms)
+        # careful: add eps after squared mean calculation
+        rms = torch.sqrt(ms + self.eps)
         
         result = x*self.weight
         result = result/rms
