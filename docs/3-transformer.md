@@ -1,6 +1,4 @@
-# 3.
-Building Blocks
-* 
+# 3. Transformer Language Model Architecture
 
 ## 3-1. Building Blocks (Linear & Embedding)
 Notes
