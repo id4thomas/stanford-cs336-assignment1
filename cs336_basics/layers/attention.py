@@ -6,18 +6,7 @@ import torch.nn as nn
 
 from cs336_basics.layers.linear import Linear
 from cs336_basics.layers.rope import RoPE
-
-def softmax(x: torch.Tensor, dim: int) -> torch.Tensor:
-    '''
-    Use the trick of subtracting the maximum value in
-    the i-th dimension from all elements of the i-th dimension to avoid numerical stability issues.
-    '''
-    x_max = x.max(dim=dim, keepdim=True).values
-    x_ = x - x_max
-    x_exp = torch.exp(x_)
-    x_exp_sum = x_exp.sum(dim=dim, keepdim=True)
-    x_exp = x_exp/x_exp_sum
-    return x_exp
+from cs336_basics.layers.softmax import softmax
 
 def make_causal_attention_mask(seq_len: int) -> torch.Tensor:
     '''
