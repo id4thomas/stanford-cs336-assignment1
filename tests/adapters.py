@@ -33,6 +33,10 @@ from cs336_basics.loss import (
 from cs336_basics.optim import(
     AdamW
 )
+from cs336_basics.optim.lr_scheduler import cosine_annealing_lr
+from cs336_basics.utils import (
+    gradient_clipping
+)
 
 def run_linear(
     d_in: int,
@@ -562,7 +566,8 @@ def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm:
 
     The gradients of the parameters (parameter.grad) should be modified in-place.
     """
-    raise NotImplementedError
+    gradient_clipping(parameters=parameters, max_l2_norm=max_l2_norm)
+    # return gradient_clipping(parameters=parameters, max_l2_norm=max_l2_norm)
 
 
 def get_adamw_cls() -> Any:
@@ -597,7 +602,13 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    raise NotImplementedError
+    return cosine_annealing_lr(
+        it=it,
+        max_learning_rate=max_learning_rate,
+        min_learning_rate=min_learning_rate,
+        warmup_iters=warmup_iters,
+        cosine_cycle_iters=cosine_cycle_iters
+    )
 
 
 def run_save_checkpoint(

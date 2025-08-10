@@ -31,7 +31,10 @@ tests/test_nn_utils.py::test_cross_entropy PASSED
 ```
 
 ## 4-2. Optimizer
+Notes
+* 
 
+AdamW Optimizer
 
 Testcases
 ```
@@ -40,3 +43,24 @@ tests/test_optimizer.py::test_adamw PASSED
 
 
 ## 4-3. Learning rate scheduling
+Cosine Annealing Scheduling
+
+
+Testcases
+```
+tests/test_optimizer.py::test_get_lr_cosine_schedule PASSED
+```
+
+## 4-4. Gradient Clipping
+Notes
+* calculate l2 norm across 'all' parameters that require grad
+
+Q. doesn't this require too much computation to calculate norm across everything?
+* All gradients are already computed during backprop and stored in memory.
+* Computing the L2 norm just means summing up (grad**2).sum() for each parameter and taking a square root —
+this is tiny compared to the cost of backprop itself.
+
+Testcases
+```
+tests/test_nn_utils.py::test_gradient_clipping PASSED
+```
