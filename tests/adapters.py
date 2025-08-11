@@ -36,7 +36,9 @@ from cs336_basics.optim import(
 from cs336_basics.optim.lr_scheduler import cosine_annealing_lr
 from cs336_basics.utils import (
     get_batch,
-    gradient_clipping
+    gradient_clipping,
+    save_checkpoint,
+    load_checkpoint
 )
 
 def run_linear(
@@ -633,7 +635,12 @@ def run_save_checkpoint(
             we've completed.
         out (str | os.PathLike | BinaryIO | IO[bytes]): Path or file-like object to serialize the model, optimizer, and iteration to.
     """
-    raise NotImplementedError
+    save_checkpoint(
+        model=model,
+        optimizer=optimizer,
+        iteration=iteration,
+        out=out
+    )
 
 
 def run_load_checkpoint(
@@ -654,7 +661,11 @@ def run_load_checkpoint(
     Returns:
         int: the previously-serialized number of iterations.
     """
-    raise NotImplementedError
+    return load_checkpoint(
+        src=src,
+        model=model,
+        optimizer=optimizer
+    )
 
 
 def get_tokenizer(
