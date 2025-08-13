@@ -1,8 +1,14 @@
 # CS336 Spring 2025 Assignment 1: Basics
-## 2. Byte-Pair Encoding (BPE) Tokenizer
-[[Docs (testcase results)](./docs/2-tokenizer.md)]
+## Docs
+| section | notes |
+| --- | --- |
+| [2-tokenizer](./docs/2-tokenizer.md) | |
+| [3-transformer](./docs/3-transformer.md) | |
+| [4-training](./docs/4-training.md) | |
+| [5-training-loop](./docs/5-training-loop.md) |  |
 
-### Training BPE
+## Notes
+### [2-tokenizer] Training BPE
 Methodology:
 ```
 1. Initialize Vocab
@@ -26,11 +32,35 @@ Training Speed by num_processes (M1 Max):
 | tinystories_sample_5M.txt | 18.560 | 21.056 | 22.420 | 22.646 |
 
 
-## 3. Transformer Language Model Architecture
-TBD
+### [5-training-loop]
+**Tokenizer Training**
 
-## 4. Training a Transformer LM
-TBD
+Example Logs:
+
+
+
+**Model Training (Updated 250813)**
+
+Example Logs:
+```
+(base) ➜  stanford-cs336-assignment1 git:(main) ✗ ./train.sh
+wandb: Currently logged in as: id4thomas to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /Users/id4thomas/github/stanford-cs336/stanford-cs336-assignment1/wandb/run-20250813_212836-56nybw0u
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run test-run1
+wandb: ⭐️ View project at https://wandb.ai/id4thomas/cs336-assignment1
+wandb: 🚀 View run at https://wandb.ai/id4thomas/cs336-assignment1/runs/56nybw0u
+0%|                                                                                                                                                                                                                                   | 0/20 [00:00<?, ?it/s]{'train/loss': 6.907755374908447, 'train/lr': 0.0009757729755661011, 'train/step': 1}
+5%|██████████▉                                                                                                                                                                                                                | 1/20 [00:00<00:07,  2.52it/s]{'train/loss': 6.907796382904053, 'train/lr': 0.0009460482294732421, 'train/step': 2}
+{'train/loss': 6.907742023468018, 'train/lr': 0.000905463412215599, 'train/step': 3}
+...
+{'train/loss': 6.907790184020996, 'train/lr': 1e-05, 'train/step': 20}
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:16<00:00,  1.24it/s]
+wandb: 
+wandb: 🚀 View run test-run1 at: https://wandb.ai/id4thomas/cs336-assignment1/runs/56nybw0u
+wandb: Find logs at: wandb/run-20250813_212836-56nybw0u/logs
+```
 
 ----
 For a full description of the assignment, see the assignment handout at
