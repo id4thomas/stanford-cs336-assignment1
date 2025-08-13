@@ -36,7 +36,7 @@ def get_batch(
     batch_input_ids = np.stack(batch_input_ids, axis=0)
     batch_target_ids = np.stack(batch_target_ids, axis=0)
     
-    input_ids = torch.tensor(batch_input_ids, device=device)
-    target_ids = torch.tensor(batch_target_ids, device=device)
+    input_ids = torch.tensor(batch_input_ids, dtype=torch.long, device=device)
+    target_ids = torch.tensor(batch_target_ids, dtype=torch.long, device=device)
     return input_ids, target_ids
         

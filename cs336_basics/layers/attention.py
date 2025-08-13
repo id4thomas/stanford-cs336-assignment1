@@ -85,6 +85,7 @@ class CausalMultiHeadSelfAttention(nn.Module):
         
         # make causal attention mask
         mask = make_causal_attention_mask(seq_len)
+        mask = mask.to(x.device) # ! need to move to same device
         
         # calc linear first 'then' view
         Q = self.q_proj(x).view(batch, seq_len, self.num_heads, self.d_k)
