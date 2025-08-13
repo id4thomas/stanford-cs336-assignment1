@@ -1,5 +1,6 @@
-from .cosine import cosine_annealing_lr
+from .cosine import cosine_annealing_lr, CosineAnnealingLRScheduler
 
 __all__ = [
-    "cosine_annealing_lr"
+    "cosine_annealing_lr",
+    "CosineAnnealingLRScheduler"
 ]
