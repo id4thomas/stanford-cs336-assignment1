@@ -12,10 +12,11 @@ from torch import Tensor
 import multiprocessing as mp
 from cs336_basics import *
 
+
 # Tokenizer
-from cs336_basics.model import TransformerBlock, Transformer
 from cs336_basics.tokenizer.train_bpe import train_bpe
 from cs336_basics.tokenizer.bpe import BPETokenizer
+
 from cs336_basics.layers import (
     CausalMultiHeadSelfAttention,
     Embedding,
@@ -27,6 +28,8 @@ from cs336_basics.layers import (
     SwiGLU,
     softmax
 )
+from cs336_basics.model import TransformerBlock, Transformer
+
 from cs336_basics.loss import (
     cross_entropy
 )
@@ -722,7 +725,7 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    num_processes = mp.cpu_count()
+    num_processes = 2 #mp.cpu_count()
     return train_bpe(
         input_path=input_path,
         vocab_size=vocab_size,

@@ -43,3 +43,23 @@ Fix History
 * `test_encode_iterable_tinystories_sample_roundtrip`: yield per token not yieling list of tokens
     * `At index 498 diff: 628 != 198, Right contains one more item: 198`
 * `test_overlapping_special_tokens`: sort special tokens first to catch the overlapping first
+
+
+## Training
+```
+VOCAB SIZE 10000 NUM PROCESSES 8
+OUTPUT TO results/tokenizer/tinystories-v10000
+Available CPU Count: 10
+
+
+Start Traininig
+Calculating Pre-token Frequencies done in 74.518s with 8 processes
+Building pair_freqs / pair_to_keys done in 0.099s
+Made heap of size 2108
+Merging done in 3.086s
+Training Complete in 77.807s!
+Vocab, Merges saved to results/tokenizer/tinystories-v10000
+Running Tests:
+ENCODED: [73, 196, 170, 294, 196, 179, 268, 196, 181, 120, 483, 33, 196, 189, 64, 33, 241, 160, 154, 132]
+DECODED: Héllò hôw are ü? 🙃
+```

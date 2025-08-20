@@ -18,15 +18,14 @@ import multiprocessing as mp
 # GPT-2 Pretokenization pattern
 PAT=r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 
-# For Pair order Comparison in max-heap
-# reference: https://github.com/brandon-snider/cs336-a1/blob/c5198cc1c780f8c13becfc7778e9317e93635ad4/cs336_basics/train_bpe.py#L15
-class ReverseOrderPair:
-    def __init__(self, pair: tuple[bytes, bytes]):
-        self.pair = pair
-    def __lt__(self, other):
-        return self.pair > other.pair
-    def __gt__(self, other):
-        return self.pair < other.pair
+class TokenNode:
+    def __init__(self, val):
+        self.val = val
+        self.prev = None
+        self.next = None
+        # For determining pre-tokenization boundary
+        self.is_next_connected = True
+
 
 def initialize_vocab(special_tokens):
     """Initiialize Vocab"""
@@ -124,9 +123,7 @@ def _pretokenize_text(
     
         ## Iterate through pretokens
         for pretok_match in compiled_PAT.finditer(part):
-            pretok = pretok_match.group().encode('utf-8')
-            pretok = tuple(bytes([b]) for b in pretok)
-            
+            pretok = pretok_match.group()
             pretok_freq[pretok] = pretok_freq.get(pretok, 0) + 1
         
     return pretok_freq
@@ -167,18 +164,14 @@ def pretokenize(
             )
     pretok_freqs = reduce(_merge_freqs, pretok_freqs, {})
     return pretok_freqs
-    
-def build_new_key(key, pair):
-    new_symbols = []
-    i = 0
-    while i < len(key):
-        if i < len(key) - 1 and key[i] == pair[0] and key[i + 1] == pair[1]:
-            new_symbols.append(key[i] + key[i + 1])  # merges, e.g. b'A' + b'B' => b'AB'
-            i += 2
-        else:
-            new_symbols.append(key[i])
-            i += 1
-    return tuple(new_symbols)
+
+def add_node(byte_val, prev):
+    """Helper to create and link a new TokenNode."""
+    node = TokenNode(byte_val)
+    if prev:
+        prev.next = node
+        node.prev = prev
+    return node
 
 def train_bpe(
     input_path: str,
@@ -209,15 +202,10 @@ def train_bpe(
     # 1. Initialize Vocab
     vocab, cur_vocab_size = initialize_vocab(special_tokens)
     
-    # 2. Calculate Pre-token frequencies (freqs)
-    '''
-    freqs = {
-        (b'A', b'B', b'C'): 5,
-        ...
-    }
-    '''
+    # 2. Pretokenize
+    ## 2-1. Calculate Pretoken frequencies
     start = time.time()
-    freqs = pretokenize(
+    pretok_freqs = pretokenize(
         input_path=input_path,
         special_tokens=special_tokens,
         num_processes=num_processes
@@ -225,124 +213,127 @@ def train_bpe(
     end = time.time()
     if verbose:
         print("Calculating Pre-token Frequencies done in {:.3f}s with {} processes".format(end-start, num_processes))
-    
-    # 3. Build Pair freqs / Reverse Index (pair_freqs, pairs_to_keys)
-    '''
-    pair_freqs = {
-        (b'A', b'B'): 5,
-        (b'B', b'C'): 8,   # (5 from ABC + 3 from BC)
-        (b'C', b'A'): 2
-    }
 
-    pairs_to_keys = {
-        (b'A', b'B'): { (b'A', b'B', b'C') },
-        (b'B', b'C'): { (b'A', b'B', b'C'), (b'B', b'C') },
-        (b'C', b'A'): { (b'C', b'A') }
-    }
-    '''
+    ## 2-2. Make Double Linked Lists
     start = time.time()
-    pair_freqs = defaultdict(int)
-    pair_to_keys = defaultdict(set)
     
-    for pretok, pretok_freq in freqs.items():
-        pretok_bytes = pretok#.encode('utf-8')
+    head = None
+    prev = None
+    for pretok, freq in pretok_freqs.items():
+        pretok_bytes = pretok.encode('utf-8')
         
-        for i in range(len(pretok_bytes)-1):
-            pair = (pretok_bytes[i], pretok_bytes[i+1])
-            pair_freqs[pair] += pretok_freq
-            pair_to_keys[pair].add(pretok_bytes)
-    
+        for _ in range(freq):
+            for byte in pretok_bytes:
+                prev = add_node(bytes([byte]), prev)
+                if head is None:
+                    head=prev
+            prev.is_next_connected=False
+  
+    # 3. Count Pair Frequencies, Record Location
+    pair_positions = defaultdict(set)
+    node = head
+    while node and node.next:
+        # print(node.val, node.is_next_connected)
+        if not node.is_next_connected:
+            node=node.next
+            continue
+        
+        pair_positions[
+            (node.val, node.next.val)
+        ].add(node)
+        node = node.next
+    pair_counts = {pair: len(nodes) for pair, nodes in pair_positions.items()}
     end = time.time()
     if verbose:
-        print("Building pair_freqs / pair_to_keys done in {:.3f}s".format(end-start))
-        
+        print("Making linked lists done in {:.3f}s".format(end-start))
+    
     # 4. Merge
     start = time.time()
-    remaining_merges = vocab_size - cur_vocab_size
+    remaining_merges = vocab_size-cur_vocab_size
+    merges: List[Tuple[bytes, bytes]] = []
     
-    ## 4-1. Initialize Heap
-    heap = []
-    for p, c in pair_freqs.items():
-        # heap by (-count, p0, p1) — ties need to favor lexicographically 'higher' pair
-        heapq.heappush(
-            heap,
-            (-c, ReverseOrderPair(p))
+    for i in range(remaining_merges):
+        # Break Ties - preferring the lexicographically greater pair.
+        max_count_pair = max(
+            pair_counts,
+            key=lambda pair: (
+                pair_counts[pair],
+                pair[0],#.decode('utf-8', errors='ignore'),
+                pair[1]#.decode('utf-8', errors='ignore')
+            )
         )
-    if verbose:
-        print(f"Made heap of size {len(heap)}")
-    
-    ## 4-2. Iterate Merging
-    merges = []
-    while remaining_merges > 0 and heap:
-        ## 4-2-1. Get max count pair
-        max_count_pair = None
-        while heap:
-            negc, pair = heapq.heappop(heap)
-            
-            p0, p1 = pair.pair
-            c = -negc
-            candidate = (p0, p1)
-            actual = pair_freqs.get(candidate, 0)
-            if actual <= 0:
-                # stale: pair no longer exists
-                continue
-            if actual != c:
-                # stale: count changed; push current value and continue
-                heapq.heappush(
-                    heap,
-                    (-actual, pair)
-                )
-                continue
-            max_count_pair = candidate
-            break
-        if max_count_pair is None:
-            break  # nothing valid left
-
-        ## 4-2-2. Add to Merges, Vocab
+        
+        # Add to merges
         merges.append(max_count_pair)
         remaining_merges-=1
         
-        # merged_val = b"".join((bytes([max_count_pair[0]]), bytes([max_count_pair[1]])))
-        merged_val = b"".join(max_count_pair)
-        vocab[cur_vocab_size] = merged_val
-        cur_vocab_size += 1
+        # Add new vocab
+        merged_val = b''.join(max_count_pair)
+        vocab[cur_vocab_size]=merged_val
+        cur_vocab_size+=1
         
-        ## 4-2-3. Process Front/Back
-        # follows https://github.com/brandon-snider/cs336-a1/blob/c5198cc1c780f8c13becfc7778e9317e93635ad4/cs336_basics/train_bpe.py#L150
-        prev_keys = list(pair_to_keys[max_count_pair])
-        changed_pairs = set()
-        for old_key in prev_keys:
-            # merge
-            old_freq = freqs.pop(old_key)
-            new_key = build_new_key(old_key, max_count_pair)
+        # Iterate through merge
+        max_count_pair_positions = list(pair_positions[max_count_pair])
+        for node_a in max_count_pair_positions:
+            # Re-validate if still merge-able
+            if (
+                node_a.next is None
+                or node_a.val!=max_count_pair[0]
+                or not node_a.is_next_connected 
+                or node_a.next.val!=max_count_pair[1]
+            ):
+                continue
+            if not node_a in pair_positions[max_count_pair]:
+                # print("HI")
+                continue
+            
+            node_b = node_a.next
+            
+            # 1. Merge Node
+            new_node = TokenNode(merged_val)
+            new_node.prev=node_a.prev
+            new_node.next=node_b.next
+            new_node.is_next_connected=node_b.is_next_connected
+ 
+            # 2. Update Left
+            if node_a.prev:
+                if node_a.prev.is_next_connected:
+                    # Remove previous
+                    prev_pair = (node_a.prev.val, node_a.val)
+                    pair_counts[prev_pair]-=1
+                    pair_positions[prev_pair].discard(node_a.prev)
+                    
+                    # Add new merged version
+                    new_pair = (node_a.prev.val, merged_val)
+                    pair_counts[new_pair] = pair_counts.get(new_pair, 0) + 1
+                    pair_positions[new_pair].add(node_a.prev)
 
-            # Decrement frequencies in pair_freqs for old_key's adjacencies
-            for i in range(len(old_key) - 1):
-                left, right = old_key[i], old_key[i + 1]
-                pair_freqs[left, right] -= old_freq
-                changed_pairs.add((left, right))
-                if pair_freqs[left, right] <= 0:
-                    del pair_freqs[left, right]
-                pair_to_keys[left, right].discard(old_key)
+                node_a.prev.next=new_node
+            
+            # 3. Update Right
+            if node_b.next:
+                if node_b.is_next_connected:
+                    # Remove previous
+                    prev_pair = (node_b.val, node_b.next.val)
+                    pair_counts[prev_pair]-=1
+                    pair_positions[prev_pair].discard(node_b)
 
-            # Increment frequencies for new_key's adjacencies
-            for i in range(len(new_key) - 1):
-                left, right = new_key[i], new_key[i + 1]
-                pair_freqs[left, right] += old_freq
-                changed_pairs.add((left, right))
-                pair_to_keys[left, right].add(new_key)
+                    # Add new merged version
+                    new_pair = (merged_val, node_b.next.val)
+                    pair_counts[new_pair] = pair_counts.get(new_pair, 0) + 1
+                    pair_positions[new_pair].add(new_node)
 
-            # Put new_key back with updated freq
-            freqs[new_key] = freqs.get(new_key, 0) + old_freq
-        
-        ## 4-2-4.
-        for cp in changed_pairs:
-            if cp in pair_freqs and pair_freqs[cp] > 0:
-                heapq.heappush(heap, (-pair_freqs[cp], ReverseOrderPair(cp)))
-
+                node_b.next.prev=new_node
+            
+            node_a.val=None
+            node_b.val=None
+        del pair_counts[max_count_pair]
+        del pair_positions[max_count_pair]
+    
     end = time.time()
     if verbose:
-        print("Merging done in {:.3f}s".format(end - start))
+        print("Merging done in {:.3f}s".format(end-start))
+        
     return vocab, merges
 
 if __name__=='__main__':
