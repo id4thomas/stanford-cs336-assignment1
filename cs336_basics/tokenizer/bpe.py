@@ -1,9 +1,10 @@
 import json
-from typing import Any, List, Dict, Tuple, Iterable, Iterator
+from typing import Any, BinaryIO, List, Dict, Tuple, Iterable, Iterator
 
 import regex as re
 
 PAT=r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+PAT_COMPILED = re.compile(PAT)
 
 class BPETokenizer:
     def __init__(
@@ -78,11 +79,6 @@ class BPETokenizer:
         else:
             parts = [text]
         
-        if self.special_tokens:
-            parts = self.split_pat.split(text)
-        else:
-            parts = [text]
-        
         indices = []
         for part in parts:
             # Handle special tokens
@@ -90,7 +86,8 @@ class BPETokenizer:
                 indices.append(part.encode('utf-8'))
                 continue
             
-            for pretok_match in re.finditer(PAT, part):
+            # for pretok_match in re.finditer(PAT, part):
+            for pretok_match in PAT_COMPILED.finditer(part):
                 pretok = pretok_match.group()
                 # Tokenize
                 part_bytes = pretok.encode('utf-8')
@@ -110,9 +107,12 @@ class BPETokenizer:
              
     
     def encode_iterable(self, iterable: Iterable[str]) -> Iterator[int]:
+        it=0
         for x in iterable:
+            # print(it, len(x))
             for token in self.encode(x):
                 yield token
+            it+=1
     
     def decode(self, ids: list[int]) -> str:
         tokens = [self.id_to_token(x) for x in ids]
