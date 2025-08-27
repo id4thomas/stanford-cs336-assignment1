@@ -1,4 +1,9 @@
 #!/bin/bash
 source .env
 
-uv run cs336_basics/train.py --config configs/test-1.json
+# CONFIG_NAME="test-1"
+# CONFIG_NAME="tinystories-test"
+CONFIG_NAME="tinystories-run1"
+
+echo "RUN ${CONFIG_NAME}"
+uv run cs336_basics/train.py --config configs/${CONFIG_NAME}.json

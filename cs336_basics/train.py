@@ -102,7 +102,7 @@ def evaluate(model, val_dataset, context_length, batch_size, device, num_batches
     model.eval()
     losses = []
     with torch.no_grad():
-        for _ in range(num_batches):
+        for _ in tqdm(range(num_batches)):
             input_ids, target_ids = get_batch(
                 val_dataset,
                 batch_size=batch_size,
@@ -173,12 +173,14 @@ def train(config):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     
-    eval_batches = val_dataset.shape[0] // batch_size
+    # eval_batches = val_dataset.shape[0] // batch_size
+    # total eval samples: eval_batches*batch_size
+    eval_batches = training_config.get("eval_batches", 32)
     
     ## Load Model to Device
     model.to(device)
     # model.to(torch.bfloat16)
-    # model = torch.compile(model, backend="aot_eager")
+    model = torch.compile(model, backend="aot_eager")
     model.train()
     
     ## Initialize Run
@@ -205,8 +207,6 @@ def train(config):
         
         # ===== Forward =====
         logits = model(input_ids)   # expected [B, T, V]
-        print(logits.shape)
-        print(logits[0][0])
         B, T, V = logits.shape
         loss = cross_entropy(
             logits.view(B * T, V),

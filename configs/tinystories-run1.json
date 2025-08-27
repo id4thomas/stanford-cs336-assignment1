@@ -1,0 +1,48 @@
+{
+    "run": {
+        "project": "cs336-assignment1",
+        "name": "tinystories-run1"
+    },
+    "data": {
+        "train_data_path": "results/dataset/TinyStoriesV2-GPT4-train/data.npy",
+        "val_data_path": "results/dataset/TinyStoriesV2-GPT4-valid/data.npy"
+    },
+    "model": {
+        "vocab_size": 10000,
+        "context_length": 256,
+        "d_model": 512,
+        "num_layers": 4,
+        "num_heads": 16,
+        "d_ff": 1344,
+        "rope_theta": 10000
+    },
+    "optimizer": {
+        "optim": "adamw",
+        "optim_args": {
+            "lr": 1e-3,
+            "betas": [
+                0.9,
+                0.999
+            ],
+            "eps": 1e-8,
+            "weight_decay": 1e-2
+        },
+        "scheduler": "cosine",
+        "scheduler_args": {
+            "min_learning_rate": 1e-5,
+            "warmup_ratio": 0.01
+        }
+    },
+    "training": {
+        "max_steps": 5000,
+        "batch_size": 32,
+        "gradient_accumulation_steps": 1,
+        "eval_steps": 250,
+        "save_steps": 250,
+        "eval_batches": 32,
+        "clip_grad_norm": 0.0,
+        "device": "mps",
+        "dtype": "bfloat16",
+        "out_dir": "results/model/tinystories-run1"
+    }
+}
