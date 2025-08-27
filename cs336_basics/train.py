@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 import json
+import os
 from math import isnan
 from typing import IO, Any, BinaryIO
 from tqdm import tqdm
@@ -45,7 +46,11 @@ def load_data(fpath):
         mode="r"
     )
 
-def initialize_model(config):
+def initialize_model(
+    config,
+    device=None,
+    dtype=None
+):
     model = Transformer(
         vocab_size=config['vocab_size'],
         context_length=config['context_length'],
@@ -54,6 +59,8 @@ def initialize_model(config):
         num_heads=config['num_heads'],
         d_ff=config['d_ff'],
         rope_theta=config['rope_theta'],
+        device=device,
+        dtype=dtype
     )
     return model
 
@@ -133,6 +140,16 @@ def train(config):
     ### Initialize DataLoader
 
     ## Initialize Model
+    dtype = training_config["dtype"]
+    if dtype=='bfloat16':
+        dtype=torch.bfloat16
+    elif dtype=='float32':
+        dtype=torch.float32
+    elif dtype=='float16':
+        dtype=torch.float16
+    else:
+        raise ValueError(f"dtype {dtype} not recognized")
+        
     model = initialize_model(model_config)
     
     ## Initialize Optimizer
@@ -153,10 +170,15 @@ def train(config):
     save_steps = training_config.get("save_steps", 1)
     out_dir = training_config["out_dir"]
     
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    
     eval_batches = val_dataset.shape[0] // batch_size
     
     ## Load Model to Device
     model.to(device)
+    # model.to(torch.bfloat16)
+    # model = torch.compile(model, backend="aot_eager")
     model.train()
     
     ## Initialize Run
@@ -183,6 +205,8 @@ def train(config):
         
         # ===== Forward =====
         logits = model(input_ids)   # expected [B, T, V]
+        print(logits.shape)
+        print(logits[0][0])
         B, T, V = logits.shape
         loss = cross_entropy(
             logits.view(B * T, V),
@@ -233,15 +257,14 @@ def train(config):
             # Save best checkpoint
             if val_loss < best_val and not isnan(val_loss):
                 best_val = val_loss
-                # if out_dir:
-                #     save_checkpoint(
-                #         model_state_dict=model.state_dict(),
-                #         optimizer_state_dict=optimizer.state_dict(),
-                #         scheduler_state_dict=scheduler.state_dict(),
-                #         step=global_step,
-                #         out_dir=out_dir,
-                #         name=f"best_step_{global_step}.pt"
-                #     )
+                if out_dir:
+                    save_checkpoint(
+                        model=model,
+                        optimizer=optimizer,
+                        iteration=global_step,
+                        out=os.path.join(out_dir, f"best_step_{global_step}.pt")
+                    )
+       
                 wandb.run.summary["best_val_loss"] = best_val
                 wandb.run.summary["best_step"] = global_step
 

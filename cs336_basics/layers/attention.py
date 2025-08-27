@@ -61,17 +61,19 @@ class CausalMultiHeadSelfAttention(nn.Module):
         self,
         d_model: int,
         num_heads: int,
-        rope: Optional[RoPE] = None
+        rope: Optional[RoPE] = None,
+        device=None,
+        dtype=None
     ):
         super().__init__()
         self.num_heads = num_heads
         self.d_k = d_model // num_heads
         
         # Init Weights
-        self.q_proj = Linear(d_model, d_model)
-        self.k_proj = Linear(d_model, d_model)
-        self.v_proj = Linear(d_model, d_model)
-        self.output_proj = Linear(d_model, d_model)
+        self.q_proj = Linear(d_model, d_model, device=device, dtype=dtype)
+        self.k_proj = Linear(d_model, d_model, device=device, dtype=dtype)
+        self.v_proj = Linear(d_model, d_model, device=device, dtype=dtype)
+        self.output_proj = Linear(d_model, d_model, device=device, dtype=dtype)
                 
         self.sdpa = ScaledDotProductAttention()
         self.rope = rope

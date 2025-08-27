@@ -14,7 +14,6 @@ class RoPE(nn.Module):
         super().__init__()
         
         # initialize inv_freq
-        
         dim_half = torch.arange(0, d_k, 2, device=device, dtype=dtype) / d_k
         inv_freq = torch.pow(torch.tensor(theta, dtype=dtype, device=device), -dim_half)
         self.register_buffer('inv_freq', inv_freq, persistent=False)

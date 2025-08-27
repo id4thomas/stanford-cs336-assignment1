@@ -14,29 +14,37 @@ class TransformerBlock(nn.Module):
         num_heads: int,
         d_ff: int,
         max_seq_len: int,
-        theta: float
+        theta: float,
+        device=None,
+        dtype=None
     ):
         super().__init__()
         d_head = d_model//num_heads
         
-        self.ln1 = RMSNorm(d_model=d_model)
-        self.ln2 = RMSNorm(d_model=d_model)
+        self.ln1 = RMSNorm(d_model=d_model, device=device, dtype=dtype)
+        self.ln2 = RMSNorm(d_model=d_model, device=device, dtype=dtype)
         
         self.rope = RoPE(
             theta=theta,
             d_k=d_head,
-            max_seq_len=max_seq_len
+            max_seq_len=max_seq_len,
+            device=device,
+            dtype=dtype
         )
         
         self.attn = CausalMultiHeadSelfAttention(
             d_model=d_model,
             num_heads=num_heads,
-            rope=self.rope
+            rope=self.rope,
+            device=device,
+            dtype=dtype
         )
         
         self.ffn = SwiGLU(
             d_model=d_model,
-            d_ff=d_ff
+            d_ff=d_ff,
+            device=device,
+            dtype=dtype
         )
         
     def forward(
@@ -44,6 +52,7 @@ class TransformerBlock(nn.Module):
         x: torch.Tensor,
         token_positions: Optional[torch.Tensor]=None
     ):
+        # pre-norm
         out1 = self.ln1(x)
         # attn on normalized
         out1 = self.attn(out1, token_positions=token_positions)
@@ -64,6 +73,8 @@ class Transformer(nn.Module):
         num_heads: int,
         d_ff: int,
         rope_theta: float,
+        device=None,
+        dtype=None
     ):
         super().__init__()
         self.token_embeddings = Embedding(
@@ -78,13 +89,15 @@ class Transformer(nn.Module):
                 num_heads=num_heads,
                 d_ff=d_ff,
                 max_seq_len=context_length,
-                theta=rope_theta
+                theta=rope_theta,
+                device=device,
+                dtype=dtype
             )
             layers.append(layer)
         self.layers = nn.ModuleList(layers)
         
-        self.ln_final = RMSNorm(d_model=d_model)
-        self.lm_head = Linear(d_model, vocab_size)
+        self.ln_final = RMSNorm(d_model=d_model, device=device, dtype=dtype)
+        self.lm_head = Linear(d_model, vocab_size, device=device, dtype=dtype)
     
     def forward(self, in_indices: torch.Tensor):
         # in_indices: (batch_size, seq_len)
@@ -95,9 +108,9 @@ class Transformer(nn.Module):
         position_ids = torch.arange(0, seq_len).view(1, seq_len)
         
         out = input_ids
-        for layer in self.layers:
+        for layer_i, layer in enumerate(self.layers):
             out = layer(out, token_positions=position_ids)
-        
+
         out = self.ln_final(out)
         out = self.lm_head(out)
         return out
