@@ -70,14 +70,17 @@ def _tokenize_fn(
     chunk_path: str,
     tokenizer_path: str,
     result_path: str,
-    chunk_size: int = 81_920
+    # chunk_size: int = 81_920
+    chunk_size: int = int(1e9)//4 # 1GB (1e-9) -> //4 -> 25_000_000
 ):
     tokenizer = load_tokenizer(tokenizer_path)
     
     # Tokenize
-    print("chunk {} start tokenization".format(chunk_i))
+    print("[chunk {}] start tokenization".format(chunk_i))
     start = time.time()
     tokens = []
+    
+    # iteration = 0
     with open(os.path.join(chunk_path, f"chunk{chunk_i}.txt"), 'r') as f:
         it = FileIterator(
             f,
@@ -85,19 +88,28 @@ def _tokenize_fn(
         )
         for id in tokenizer.encode_iterable(it):
             tokens.append(id)
+            # if iteration%1000==0:
+            # if iteration%10==0:
+            #     end = time.time()
+            #     print("[chunk {}] iteration {} in {:3f}s".format(
+            #         chunk_i,
+            #         iteration,
+            #         end-start
+            #     ))
+            # iteration+=1
                 
         # for id in tokenizer.encode_iterable(f):
         #     tokens.append(id)
     
     end = time.time()
-    print("chunk {} tokenized in {:.3f}s".format(chunk_i, end-start))
+    print("[chunk {}] tokenized in {:.3f}s".format(chunk_i, end-start))
     
     start = time.time()
     tokenized_text = np.array(tokens, dtype=np.uint16)
     with open(os.path.join(result_path, f"chunk{chunk_i}.npy"), 'wb') as f:
         np.save(f, tokenized_text)
     end = time.time()
-    print("chunk {} saved in {:.3f}s shape {}".format(chunk_i, end-start, str(tokenized_text.shape)))
+    print("[chunk {}] saved in {:.3f}s shape {}".format(chunk_i, end-start, str(tokenized_text.shape)))
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description="Train LM")

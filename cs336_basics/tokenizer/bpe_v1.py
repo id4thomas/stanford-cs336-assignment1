@@ -16,12 +16,7 @@ class BPETokenizer:
         self.vocab=vocab
         self.inv_vocab = {v:k for k,v in vocab.items()}
 
-        # Merges
         self.merges=merges
-        ## index
-        self.rank = {pair: i for i, pair in enumerate(self.merges)}
-        
-        # Special Tokens
         if isinstance(special_tokens, list) and special_tokens:
             # Sort to ensure case ['<|eot|><|eot|>', '<|eot|>']
             self.special_tokens=sorted(special_tokens, key=lambda x: (-len(x), x))
@@ -56,31 +51,8 @@ class BPETokenizer:
                 "token {} not in vocab".format(token.decode('utf-8', errors='ignore'))
             )
         return self.inv_vocab[token]
-    
-    def _encode_piece(self, tokens: List[bytes]) -> list[bytes]:
-        # start with bytes-level tokens
-
-        while True:
-            # look at all adjacent pairs
-            pairs = []
-            for i in range(len(tokens)-1):
-                candidate = (tokens[i], tokens[i+1])
-                if candidate in self.rank:
-                    rank_val = self.rank[candidate]
-                    pairs.append((rank_val, i)) # record rank, token idx
-
-            if not pairs:
-                break  # no mergeable pairs left
-
-            # pick the best (lowest rank -> early merge)
-            _, i = min(pairs, key=lambda x: x[0])
-
-            # merge that pair
-            merged = tokens[i] + tokens[i+1]
-            tokens[i:i+2] = [merged]
-
-        return tokens
         
+    
     def merge(self, indices: List[bytes], merge_pair: Tuple[bytes, bytes]) -> List[bytes]:
         merged_index = b''.join(merge_pair)
         new_indices = []
@@ -122,10 +94,8 @@ class BPETokenizer:
                 part_indices = list(map(lambda x: bytes([x]), part_bytes))
                 
                 # Merge
-                # for merge_pair in self.merges:
-                #     part_indices = self.merge(part_indices, merge_pair)
-                    
-                part_indices = self._encode_piece(part_indices)
+                for merge_pair in self.merges:
+                    part_indices = self.merge(part_indices, merge_pair)
             
                 indices.extend(part_indices)
         return indices

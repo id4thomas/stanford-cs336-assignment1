@@ -56,10 +56,11 @@ Profiling (What part of the tokenizer training process takes the most time?)
 | TinyStoriesV2-GPT4-train | 522.211s | 519.247s | 0.084s | 2.779s |
 
 Training Speed by num_processes (M1 Max):
-| input_file | 1 | 4 | 8 |
-| --- | --- | --- | --- |
-| tinystories_sample_5M | 1.635s | 0.801s | 0.704s | 
-| TinyStoriesV2-GPT4-train | 522.211s | 131.409s | 75.210s |
+| input_file | Vocab Size | 1 | 4 | 8 |
+| --- | --- | --- | --- | --- |
+| tinystories_sample_5M | 10,000 | 1.635s | 0.801s | 0.704s | 
+| TinyStoriesV2-GPT4-train | 10,000 | 522.211s | 131.409s | 75.210s |
+| owt-train | 32,000 | - | - | 1533.620s |
 
 
 ### [5-training-loop]

@@ -46,6 +46,7 @@ Fix History
 
 
 ## Training
+Tinystores:
 ```
 VOCAB SIZE 10000 NUM PROCESSES 8
 OUTPUT TO results/tokenizer/tinystories-v10000
@@ -62,4 +63,19 @@ Vocab, Merges saved to results/tokenizer/tinystories-v10000
 Running Tests:
 ENCODED: [73, 196, 170, 294, 196, 179, 268, 196, 181, 120, 483, 33, 196, 189, 64, 33, 241, 160, 154, 132]
 DECODED: Héllò hôw are ü? 🙃
+```
+
+OWT
+```
+VOCAB SIZE 32000 NUM PROCESSES 8
+OUTPUT TO results/tokenizer/owt-v32000
+Available CPU Count: 10
+
+Start Traininig
+Calculating Pre-token Frequencies done in 480.815s with 8 processes
+Building pair_freqs / pair_to_keys done in 58.840s
+Made heap of size 19592
+Merging done in 977.923s
+Training Complete in 1533.620s!
+Vocab, Merges saved to results/tokenizer/owt-v32000
 ```
