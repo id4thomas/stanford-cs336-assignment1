@@ -18,6 +18,12 @@ Testcases:
 tests/test_model.py::test_rmsnorm PASSED
 ```
 
+Stability Tips:
+- initializing weight with `torch.ones` instead of `torch.empty` prevents nan issue
+    - also keep weight in `float32` since we upcast it in `forward`
+- rms: use `torch.rsqrt` instead of `sqrt` & divide
+    - use `torch.clamp` to prevent underflow
+
 ### 3-2-2. SwiGLU Feed-forward Network
 SwiGLU = SiLU (Swish) Activation + GLU
 * SiLU (Swish): sigmoid(x)*x, 
