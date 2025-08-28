@@ -1,15 +1,14 @@
 # CS336 Spring 2025 Assignment 1: Basics
-## Docs
 | section | notes |
 | --- | --- |
-| [2-tokenizer](./docs/2-tokenizer.md) | |
-| [3-transformer](./docs/3-transformer.md) | |
-| [4-training](./docs/4-training.md) | |
-| [5-training-loop](./docs/5-training-loop.md) |  |
+| [2-tokenizer](./docs/2-tokenizer.md) | Byte-Pair Encoding (BPE) Tokenizer |
+| [3-transformer](./docs/3-transformer.md) | Transformer Language Model Architecture |
+| [4-training](./docs/4-training.md) | Training a Transformer LM |
+| [5-training-loop](./docs/5-training-loop.md) | Training loop |
+| [6-generating-text](./docs/6-generating-text.md) | Generating text |
 
-## Notes
-### [2-tokenizer] Training BPE
-Methodology:
+## [2-tokenizer] Training BPE
+### Methodology
 ```
 1. Initialize Vocab
 2. Pre-tokenize (multi-process)
@@ -44,7 +43,7 @@ pairs_to_keys = {
 }
 ```
 
-Profiling (What part of the tokenizer training process takes the most time?)
+### Profiling (What part of the tokenizer training process takes the most time?)
 * Test with 1 process on M1 Max (10 Core - 8 Performance + 2 Efficient)
 * TinyStoriesV2-GPT4-train uses about 11G of RAM
 * Pretokenization takes the majority of runtime
@@ -63,38 +62,45 @@ Training Speed by num_processes (M1 Max):
 | owt-train | 32,000 | - | - | 1533.620s |
 
 
-### [5-training-loop]
-**Tokenizer Training**
+## [5-training-loop]
+### Tokenizer Training
+Example Logs (Tinystories):
+```
+VOCAB SIZE 10000 NUM PROCESSES 8
+OUTPUT TO results/tokenizer/tinystories-v10000
+Available CPU Count: 10
 
-Example Logs:
+Start Traininig
+Calculating Pre-token Frequencies done in 74.518s with 8 processes
+Building pair_freqs / pair_to_keys done in 0.099s
+Made heap of size 2108
+Merging done in 3.086s
+Training Complete in 77.807s!
+Vocab, Merges saved to results/tokenizer/tinystories-v10000
+Running Tests:
+ENCODED: [73, 196, 170, 294, 196, 179, 268, 196, 181, 120, 483, 33, 196, 189, 64, 33, 241, 160, 154, 132]
+DECODED: Héllò hôw are ü? 🙃
 ```
 
+
+### Model Training
+Loss Example (`tinystories-run2` - Updated 250829)
+- Runtime: 3h 43m
+- Validation Loss (best_step_8800): 1.445 
+- config: [[file](./configs/tinystories-run2.json)]
+![tinystories-run2_loss](./docs/figs/tinystories-run2_loss.png)
+
+## [6-generating-text]
+Example Generation:
+- Give " " as prompt, max_len 256 completion tokens
 ```
+Generated Text of len 386 in 17.303
 
-
-**Model Training (Updated 250813)**
-
-Example Logs:
+The little girl was so excited. She ran to the kitchen and grabbed a big bowl of ice cream. She was so happy and started to eat it. 
+But then, she heard a loud noise. It was a big, scary monster! The monster was so angry that it chased the little girl away. 
+The little girl was so scared that she ran away and never came back. She was so sad and she never got to eat ice cream again.
 ```
-(base) ➜  stanford-cs336-assignment1 git:(main) ✗ ./train.sh
-wandb: Currently logged in as: id4thomas to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
-wandb: Tracking run with wandb version 0.21.0
-wandb: Run data is saved locally in /Users/id4thomas/github/stanford-cs336/stanford-cs336-assignment1/wandb/run-20250813_212836-56nybw0u
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run test-run1
-wandb: ⭐️ View project at https://wandb.ai/id4thomas/cs336-assignment1
-wandb: 🚀 View run at https://wandb.ai/id4thomas/cs336-assignment1/runs/56nybw0u
-0%|                                                                                                                                                                                                                                   | 0/20 [00:00<?, ?it/s]{'train/loss': 6.907755374908447, 'train/lr': 0.0009757729755661011, 'train/step': 1}
-5%|██████████▉                                                                                                                                                                                                                | 1/20 [00:00<00:07,  2.52it/s]{'train/loss': 6.907796382904053, 'train/lr': 0.0009460482294732421, 'train/step': 2}
-{'train/loss': 6.907742023468018, 'train/lr': 0.000905463412215599, 'train/step': 3}
-...
-{'train/loss': 6.907790184020996, 'train/lr': 1e-05, 'train/step': 20}
-100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:16<00:00,  1.24it/s]
-wandb: 
-wandb: 🚀 View run test-run1 at: https://wandb.ai/id4thomas/cs336-assignment1/runs/56nybw0u
-wandb: Find logs at: wandb/run-20250813_212836-56nybw0u/logs
-```
-
+----
 ----
 For a full description of the assignment, see the assignment handout at
 [cs336_spring2025_assignment1_basics.pdf](./cs336_spring2025_assignment1_basics.pdf)
