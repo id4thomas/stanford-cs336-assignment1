@@ -13,21 +13,14 @@ import torch
 import wandb
 
 # Tokenizer
-from cs336_basics.model import TransformerBlock, Transformer
-
-from cs336_basics.tokenizer.bpe import BPETokenizer
-from cs336_basics.loss import (
-    cross_entropy
-)
-from cs336_basics.optim import(
-    AdamW
-)
+from cs336_basics.model import Transformer
+from cs336_basics.loss import cross_entropy
+from cs336_basics.optim import AdamW
 from cs336_basics.optim.lr_scheduler import CosineAnnealingLRScheduler
 from cs336_basics.utils import (
     get_batch,
     gradient_clipping,
-    save_checkpoint,
-    load_checkpoint
+    save_checkpoint
 )
 
 def initialize_run(config):
@@ -49,8 +42,17 @@ def load_data(fpath):
 def initialize_model(
     config,
     device=None,
-    dtype=None
 ):
+    dtype = config.get("dtype", "float32")
+    if dtype=='bfloat16':
+        dtype=torch.bfloat16
+    elif dtype=='float32':
+        dtype=torch.float32
+    elif dtype=='float16':
+        dtype=torch.float16
+    else:
+        raise ValueError(f"dtype {dtype} not recognized")
+    
     model = Transformer(
         vocab_size=config['vocab_size'],
         context_length=config['context_length'],
@@ -138,18 +140,7 @@ def train(config):
     val_dataset = load_data(data_config['val_data_path'])
     
     ### Initialize DataLoader
-
     ## Initialize Model
-    dtype = training_config["dtype"]
-    if dtype=='bfloat16':
-        dtype=torch.bfloat16
-    elif dtype=='float32':
-        dtype=torch.float32
-    elif dtype=='float16':
-        dtype=torch.float16
-    else:
-        raise ValueError(f"dtype {dtype} not recognized")
-        
     model = initialize_model(model_config)
     
     ## Initialize Optimizer
@@ -179,12 +170,15 @@ def train(config):
     
     ## Load Model to Device
     model.to(device)
-    # model.to(torch.bfloat16)
     model = torch.compile(model, backend="aot_eager")
     model.train()
     
     ## Initialize Run
     initialize_run(run_config)
+    
+    # Save config
+    with open(os.path.join(out_dir, "config.json"), "w") as f:
+        f.write(json.dumps(model_config, indent=4, ensure_ascii=False))
     
     ## Start Training Loop
     global_step=0
@@ -267,7 +261,8 @@ def train(config):
        
                 wandb.run.summary["best_val_loss"] = best_val
                 wandb.run.summary["best_step"] = global_step
-
+    
+    print("Training Complete")
     
 
 if __name__=="__main__":

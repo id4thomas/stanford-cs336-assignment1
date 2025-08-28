@@ -77,6 +77,14 @@ class Transformer(nn.Module):
         dtype=None
     ):
         super().__init__()
+        self.vocab_size = vocab_size
+        self.context_length = context_length
+        self.d_model = d_model
+        self.num_layers = num_layers
+        self.num_heads = num_heads
+        self.d_ff = d_ff
+        self.rope_theta = rope_theta
+        
         self.token_embeddings = Embedding(
             num_embeddings=vocab_size,
             embedding=d_model
